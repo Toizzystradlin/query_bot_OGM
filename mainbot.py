@@ -78,36 +78,14 @@ def handle_commands(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):
-    if call.data == 'cause_1':
-        try:
+    sql = "SELECT reason FROM reasons"
+    cursor.execute(sql)
+    reasons = cursor.fetchall()
+    for i in reasons:
+        if call.data == i[0]:
             chat_id = call.message.chat.id
             query = user_dict[chat_id]
-            query.reason = 'Механика'
-
-            bot.send_message(call.message.chat.id, "*Наименование: *" + query.eq_name +
-                             "\n" + "*Инв.№: *" + query.invnum + "\n" + "*Тип станка: *" + query.eq_type + "\n" + "*Участок: *" +
-                             query.area + "\n" + "*Оборудование остановилось?: *" + query.eq_status + "\n" +
-                             "*Причина поломки: *" + query.reason, parse_mode="Markdown")
-
-            try:
-                bot.delete_message(call.message.chat.id, message_id=call.message.message_id - 1)
-                bot.delete_message(call.message.chat.id, message_id=call.message.message_id)
-            except:
-                print('не получилось удалить сообщения')
-
-            # bot.send_message(call.message.chat.id, 'ВВЕДИТЕ ОПИАНИЕ ПРОБЛЕМЫЫЫ!!!')
-
-            msg = bot.send_message(call.message.chat.id, 'Введите описание проблемы')
-            bot.register_next_step_handler(msg, sendquery1)
-        except:
-            print('ошибка в каузе 1')
-
-    elif call.data == 'cause_2':
-        try:
-            chat_id = call.message.chat.id
-            query = user_dict[chat_id]
-            query.reason = 'Электрика'
-
+            query.reason = i[0]
             bot.send_message(call.message.chat.id, "*Наименование: *" + query.eq_name +
                              "\n" + "*Инв.№: *" + query.invnum + "\n" + "*Тип станка: *" + query.eq_type + "\n" + "*Участок: *" +
                              query.area + "\n" + "*Оборудование остановилось?: *" + query.eq_status + "\n" +
@@ -119,31 +97,8 @@ def callback_worker(call):
                 print('не получилось удалить сообщения')
             msg = bot.send_message(call.message.chat.id, 'Введите описание проблемы')
             bot.register_next_step_handler(msg, sendquery1)
-        except:
-            print('ошибка в каузе 2')
 
-    elif call.data == 'cause_3':
-        try:
-            chat_id = call.message.chat.id
-            query = user_dict[chat_id]
-            query.reason = 'СОЖ'
-
-            bot.send_message(call.message.chat.id, "*Наименование: *" + query.eq_name +
-                             "\n" + "*Инв.№: *" + query.invnum + "\n" + "*Тип станка: *" + query.eq_type + "\n" + "*Участок: *" +
-                             query.area + "\n" + "*Оборудование остановилось?: *" + query.eq_status + "\n" +
-                             "*Причина поломки: *" + query.reason, parse_mode="Markdown")
-
-            try:
-                bot.delete_message(call.message.chat.id, message_id=call.message.message_id - 1)
-                bot.delete_message(call.message.chat.id, message_id=call.message.message_id)
-            except:
-                print('не получилось удалить сообщения')
-            msg = bot.send_message(call.message.chat.id, 'Введите описание проблемы')
-            bot.register_next_step_handler(msg, sendquery1)
-        except:
-            print("ошибка в каузе 3")
-
-    elif call.data == 'send_query':
+    if call.data == 'send_query':
         try:
             chat_id = call.message.chat.id
             query = user_dict[chat_id]
@@ -255,14 +210,15 @@ def callback_worker(call):
 def reason(call):
     try:
         # выводим кнопки для выбора причины поломки
-        keyboard = telebot.types.InlineKeyboardMarkup()
-        key_1 = telebot.types.InlineKeyboardButton('Механика', callback_data='cause_1')
-        keyboard.add(key_1)
-        key_2 = telebot.types.InlineKeyboardButton('Электрика', callback_data='cause_2')
-        keyboard.add(key_2)
-        key_3 = telebot.types.InlineKeyboardButton('СОЖ', callback_data='cause_3')
-        keyboard.add(key_3)
-        bot.send_message(call.message.chat.id, 'Выберите тип поломки', reply_markup=keyboard)
+        sql = "SELECT reason FROM reasons"
+        cursor.execute(sql)
+        reasons = cursor.fetchall()
+        keyboard_reasons = telebot.types.InlineKeyboardMarkup()
+        for i in reasons:
+            keyboard = telebot.types.InlineKeyboardMarkup()
+            key = telebot.types.InlineKeyboardButton(i[0], callback_data=i[0])
+            keyboard_reasons.add(key)
+        bot.send_message(call.message.chat.id, 'Выберите тип поломки', reply_markup=keyboard_reasons)
     except:
         print('ошибка в риазон')
 
@@ -299,4 +255,3 @@ while True:
         bot.polling(none_stop=True)
     except Exception as e:
         print(e)
-
