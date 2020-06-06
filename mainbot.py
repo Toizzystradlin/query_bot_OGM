@@ -2,7 +2,16 @@ from datetime import datetime
 
 import mysql.connector
 import telebot
+from telebot import apihelper
 import Send_message
+
+
+apihelper.proxy = {'https':'https://51.158.111.229:8811'}  # рабочий прокси Франция
+
+#apihelper.proxy = {'https':'https://176.110.121.90:21776'}  # русский плохой
+
+#apihelper.proxy = {'https':'31.179.224.42:38263'}  # польский, не работает
+
 
 db = mysql.connector.connect(
     host='localhost',
@@ -66,8 +75,8 @@ def handle_commands(message):
                 bot.send_message(message.chat.id, 'Оборудование остановилось?', reply_markup=keyboard)
             else:
                 bot.send_message(message.chat.id, 'ты просто написал старт')
-        except:
-            print('ошибка в старте')
+        except Exception as ex:
+            print(ex)
 
     if message.text == '/help':
         try:
