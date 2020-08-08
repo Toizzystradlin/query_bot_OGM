@@ -25,14 +25,13 @@ def send_message_1(query_id, name, inv, place, cause, msg):  # функция д
     key_postpone = telebot.types.InlineKeyboardButton('Отложить', callback_data='postpone')
     keyboard.add(key_postpone)
 
-
-    #392674056
+    # 392674056
     for i in masters_id:
         try:
             bot_2.send_message(i[0], "*НОВАЯ ЗАЯВКА*" + "\n" + "*id_заявки: *" + str(
-            query_id) + "\n" + "*Наименование: *" + name + "\n" +
-                       "*Инв.№: *" + inv + "\n" + "*Участок: *" + place + "\n" + "*Причина поломки: *" +
-                       cause + "\n" + "*Сообщение: *" + msg, reply_markup=keyboard, parse_mode="Markdown")
+                query_id) + "\n" + "*Наименование: *" + name + "\n" +
+                               "*Инв.№: *" + inv + "\n" + "*Участок: *" + place + "\n" + "*Причина поломки: *" +
+                               cause + "\n" + "*Сообщение: *" + msg, reply_markup=keyboard, parse_mode="Markdown")
         except:
             pass
 
@@ -96,4 +95,24 @@ def send_message_3(query_id):
     cursor3.close()
 
 
+def send_message_4(name, eq_type, inv, area, msg):
+    import telebot
+    db = mysql.connector.connect(
+        host='localhost',
+        user='root',
+        passwd='12345',
+        port='3306',
+        database='ogm2'
+    )
+    cursor4 = db.cursor(buffered=True)
+    sql = "SELECT tg_id FROM employees WHERE (master = True)"
+    cursor4.execute(sql)
+    masters_id = cursor4.fetchall()
 
+    bot_2 = telebot.TeleBot('1044824865:AAGACPaLwqHdOMn5HZamAmSljkoDvSwOiBw')
+    for i in masters_id:
+        bot_2.send_message(i[0], "*ЗАЯВКА ВЫПОЛНЕНА*" + "\n" + "*Наименование: *" + str(name) + "\n" +
+                           "*Инв.№: *" + str(inv) + "\n" + "*Тип оборудования: *" + str(
+            eq_type) + "\n" + "*Участок: *" + str(area) + "\n" + "*Сообщение: *" + str(msg) + "\n" +
+                           "*ЗАЯВКА ВЫПОЛНЕНА*", parse_mode="Markdown")
+    cursor4.close()
