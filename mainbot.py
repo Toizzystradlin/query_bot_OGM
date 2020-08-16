@@ -5,7 +5,7 @@ from telebot import apihelper
 import Send_message
 
 
-
+query_photo_path = 'C:/Users/User/Desktop/projects/DjangoOGM/main/static/images/query_photos/'
 
 #apihelper.proxy = {'https':'https://51.158.111.229:8811'}  # рабочий прокси Франция
 
@@ -44,6 +44,7 @@ while True:
                 self.query_status = None
                 self.query_id = None
                 self.doers = None
+                self.photo_name = None
 
 
         @bot.message_handler(commands=['start', 'check'])
@@ -110,7 +111,7 @@ while True:
                     except:
                         print('не получилось удалить сообщения')
                     msg = bot.send_message(call.message.chat.id, 'Введите описание проблемы')
-                    bot.register_next_step_handler(msg, sendquery1)
+                    bot.register_next_step_handler(msg, sendquery2)
 
             if call.data == 'send_query':
                 try:
@@ -176,12 +177,15 @@ while True:
 
 
 
-            elif call.data == 'cancel_query':
+            elif call.data == 'add_photo':
                 try:
+                    #bot.delete_message(call.message.chat.id, message_id=call.message.message_id)
+                    #bot.send_message(call.message.chat.id, 'Заявка отменена')
+                    msg = bot.send_message(call.message.chat.id, 'Отправте мне фото')
+                    bot.register_next_step_handler(msg, handle__photo)
                     bot.delete_message(call.message.chat.id, message_id=call.message.message_id)
-                    bot.send_message(call.message.chat.id, 'Заявка отменена')
                 except:
-                    print('ошибка в канселе')
+                    print('ошибка в add_photo')
 
             elif call.data == 'stopped':
                 try:
@@ -230,7 +234,7 @@ while True:
                 reasons = cursor.fetchall()
                 keyboard_reasons = telebot.types.InlineKeyboardMarkup()
                 for i in reasons:
-                    keyboard = telebot.types.InlineKeyboardMarkup()
+                   # keyboard = telebot.types.InlineKeyboardMarkup()
                     key = telebot.types.InlineKeyboardButton(i[0], callback_data=i[0])
                     keyboard_reasons.add(key)
                 bot.send_message(call.message.chat.id, 'Выберите тип поломки', reply_markup=keyboard_reasons)
@@ -264,6 +268,109 @@ while True:
                 bot.send_message(message.chat.id, "Отправить заявку?", reply_markup=keyboard)
             except:
                 print('ошибка в сендкваери')
+
+        def sendquery2(message):
+            chat_id = message.chat.id
+            query = user_dict[chat_id]
+            query.msg = message.text
+            print(message.message_id)
+            print(message.chat.id)
+            print(message.text)
+            #try:
+            #    bot.delete_message(message.chat.id, message_id=message.message_id - 2)
+            #    bot.delete_message(message.chat.id, message_id=message.message_id - 1)
+            #except:
+                #print('не получилось удалить сообщения')
+            bot.send_message(message.chat.id, "*Наименование: *" + query.eq_name +
+                             "\n" + "*Инв.№: *" + query.invnum + "\n" + "*Тип станка: *" + query.eq_type + "\n" + "*Участок: *" +
+                             query.area + "\n" + "*Причина поломки: *" + query.reason +
+                             "\n" + "*Сообщение:*" + query.msg, parse_mode="Markdown")
+
+            keyboard = telebot.types.InlineKeyboardMarkup()
+            key_yes = telebot.types.InlineKeyboardButton('Отправить без фото', callback_data='send_query')
+            keyboard.add(key_yes)
+            key_no = telebot.types.InlineKeyboardButton('Добавить фото', callback_data='add_photo')
+            keyboard.add(key_no)
+            bot.send_message(message.chat.id, "Добавить фото?", reply_markup=keyboard)
+
+
+
+        def handle__photo(message):
+            chat_id = message.chat.id
+            query = user_dict[chat_id]
+            try:
+                print('message.photo =', message.photo)
+                fileID = message.photo[-1].file_id
+                print('fileID =', fileID)
+                file_info = bot.get_file(fileID)
+                print('file.file_path =', file_info.file_path)
+                downloaded_file = bot.download_file(file_info.file_path)
+                query.photo_name = file_info.file_path
+
+                with open(query_photo_path + file_info.file_path, 'wb') as new_file:
+                    new_file.write(downloaded_file)
+            except Exception as e:
+                print(e)
+            try:
+                chat_id = message.chat.id
+                query = user_dict[chat_id]
+
+                query.query_status = 'Новая'
+
+                sql = "INSERT INTO queries (eq_id, reason, msg, post_time, " \
+                      "query_status, json_emp, photo_name) VALUES (" \
+                      "%s, %s, %s, %s, %s, %s, %s) "
+                val = [
+                    (query.eq_id, query.reason, query.msg, datetime.now(),
+                     query.query_status, '{"doers": []}', query.photo_name)
+                ]
+                cursor.executemany(sql, val)
+                db.commit()
+
+                sql = "UPDATE equipment SET eq_status = %s WHERE eq_id = %s"
+                val = (query.eq_status, query.eq_id)
+                cursor.execute(sql, val)
+                db.commit()
+
+                if query.eq_status == 'Остановлено':
+                    sql = "SELECT * FROM eq_stoptime WHERE (eq_id = %s) AND (start_time IS NULL) ORDER BY id DESC LIMIT 1"
+                    val = (query.eq_id,)
+                    cursor.execute(sql, val)
+                    result = cursor.fetchall()
+                    result = list(result)
+                    if len(result) == 0:
+                        sql = "INSERT INTO eq_stoptime (eq_id, stop_time) VALUES (%s, %s)"
+                        val = (query.eq_id, datetime.now())
+                        cursor.execute(sql, val)
+                        db.commit()
+                elif query.eq_status == 'Работает':
+                    sql = "SELECT * FROM eq_stoptime WHERE (eq_id = %s) AND (start_time IS NULL) ORDER BY id DESC LIMIT 1"
+                    val = (query.eq_id,)
+                    cursor.execute(sql, val)
+                    result = cursor.fetchone()
+                    try:
+                        result = list(result)
+                        if len(result) > 0:
+                            i = result[0]
+                            sql = "UPDATE eq_stoptime SET start_time = %s WHERE id = %s"
+                            val = (datetime.now(), i)
+                            cursor.execute(sql, val)
+                            db.commit()
+                    except:
+                        pass
+
+                sql = "SELECT MAX(query_id) FROM queries"
+                cursor.execute(sql)
+                query.query_id = cursor.fetchone()[0]
+
+                #bot.delete_message(message.chat.id, message_id=message.message_id)
+                bot.send_message(message.chat.id, 'Заявка отправлена')
+
+                # Отправить уведомление мастеру
+                Send_message.send_message_1(query.query_id, query.eq_name, query.invnum, query.area, query.reason,
+                                            query.msg)  # Отправить уведомление мастерам
+            except Exception as ex:
+                print(ex)
 
         while True:
             try:

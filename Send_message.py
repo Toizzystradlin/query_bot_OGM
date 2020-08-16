@@ -12,7 +12,8 @@ def send_message_1(query_id, name, inv, place, cause, msg):  # функция д
         database='ogm2'
     )
     cursor3 = db.cursor(buffered=True)
-    sql = "SELECT tg_id FROM employees WHERE (master = True)"
+    #sql = "SELECT tg_id FROM employees WHERE (master = True)"
+    sql = "SELECT tg_id FROM employees WHERE (rank = 'инженер')"
     cursor3.execute(sql)
     masters_id = cursor3.fetchall()
     print(masters_id)
