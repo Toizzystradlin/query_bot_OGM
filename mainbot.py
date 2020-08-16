@@ -367,8 +367,8 @@ while True:
                 bot.send_message(message.chat.id, 'Заявка отправлена')
 
                 # Отправить уведомление мастеру
-                Send_message.send_message_1(query.query_id, query.eq_name, query.invnum, query.area, query.reason,
-                                            query.msg)  # Отправить уведомление мастерам
+                Send_message.send_message_5(query.query_id, query.eq_name, query.invnum, query.area, query.reason,
+                                            query.msg, query_photo_path + query.photo_name)  # Отправить уведомление мастерам
             except Exception as ex:
                 print(ex)
 
