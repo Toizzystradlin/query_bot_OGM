@@ -4,16 +4,7 @@ import telebot
 from telebot import apihelper
 import Send_message
 
-
 query_photo_path = 'C:/Users/User/Desktop/projects/DjangoOGM/main/static/images/query_photos/'
-
-#apihelper.proxy = {'https':'https://51.158.111.229:8811'}  # рабочий прокси Франция
-
-#apihelper.proxy = {'https':'https://176.110.121.90:21776'}  # русский плохой
-
-#apihelper.proxy = {'https':'31.179.224.42:38263'}  # польский, не работает
-
-#apihelper.proxy = {'https':'192.168.0.100:50278'}  #
 
 while True:
     try:
@@ -28,7 +19,6 @@ while True:
         cursor = db.cursor(True)
         user_dict = {}
         bot = telebot.TeleBot('1048146486:AAGwY0ClpWvUtjlBy-D6foxhIntZUFb7-5s')
-
 
         class Q:
             def __init__(self, chat):
@@ -45,7 +35,6 @@ while True:
                 self.query_id = None
                 self.doers = None
                 self.photo_name = None
-
 
         @bot.message_handler(commands=['start', 'check'])
         def handle_commands(message):
@@ -89,7 +78,6 @@ while True:
                     bot.send_message(message.chat.id, 'Привет, да я работаю')
                 except:
                     print('ошибка в чек')
-
 
         @bot.callback_query_handler(func=lambda call: True)
         def callback_worker(call):
@@ -165,17 +153,13 @@ while True:
                     cursor.execute(sql)
                     query.query_id = cursor.fetchone()[0]
 
-
                     bot.delete_message(call.message.chat.id, message_id=call.message.message_id)
                     bot.send_message(call.message.chat.id, 'Заявка отправлена')
-
                     # Отправить уведомление мастеру
                     Send_message.send_message_1(query.query_id, query.eq_name, query.invnum, query.area, query.reason,
                                                 query.msg)  # Отправить уведомление мастерам
                 except Exception as ex:
                     print(ex)
-
-
 
             elif call.data == 'add_photo':
                 try:
@@ -225,7 +209,6 @@ while True:
                 except:
                     print('ошибка в воркинг')
 
-
         def reason(call):
             try:
                 # выводим кнопки для выбора причины поломки
@@ -240,7 +223,6 @@ while True:
                 bot.send_message(call.message.chat.id, 'Выберите тип поломки', reply_markup=keyboard_reasons)
             except:
                 print('ошибка в риазон')
-
 
         def sendquery1(message):
             try:
@@ -293,8 +275,6 @@ while True:
             keyboard.add(key_no)
             bot.send_message(message.chat.id, "Добавить фото?", reply_markup=keyboard)
 
-
-
         def handle__photo(message):
             chat_id = message.chat.id
             query = user_dict[chat_id]
@@ -314,9 +294,7 @@ while True:
             try:
                 chat_id = message.chat.id
                 query = user_dict[chat_id]
-
                 query.query_status = 'Новая'
-
                 sql = "INSERT INTO queries (eq_id, reason, msg, post_time, " \
                       "query_status, json_emp, photo_name) VALUES (" \
                       "%s, %s, %s, %s, %s, %s, %s) "
@@ -358,14 +336,11 @@ while True:
                             db.commit()
                     except:
                         pass
-
                 sql = "SELECT MAX(query_id) FROM queries"
                 cursor.execute(sql)
                 query.query_id = cursor.fetchone()[0]
-
                 #bot.delete_message(message.chat.id, message_id=message.message_id)
                 bot.send_message(message.chat.id, 'Заявка отправлена')
-
                 # Отправить уведомление мастеру
                 Send_message.send_message_5(query.query_id, query.eq_name, query.invnum, query.area, query.reason,
                                             query.msg, query_photo_path + query.photo_name)  # Отправить уведомление мастерам
