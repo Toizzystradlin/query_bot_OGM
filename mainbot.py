@@ -17,7 +17,7 @@ try:
     )
     cursor = db.cursor(True)
     user_dict = {}
-    bot = telebot.TeleBot('1048146486:AAGwY0ClpWvUtjlBy-D6foxhIntZUFb7-5s')
+    bot = telebot.TeleBot('#')
     class Q:
         def __init__(self, chat):
             self.chat_id = chat
