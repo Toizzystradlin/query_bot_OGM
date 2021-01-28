@@ -24,7 +24,7 @@ def send_message_1(query_id, name, inv, place, cause, msg, creator_tg_id, q_stat
         creator_fio = creator_fio[0]
     except: creator_fio = 'Неизвестный'
 
-    bot_2 = telebot.TeleBot('1044824865:AAGACPaLwqHdOMn5HZamAmSljkoDvSwOiBw')
+    bot_2 = telebot.TeleBot('#')
 
     keyboard = telebot.types.InlineKeyboardMarkup()
     key_choose = telebot.types.InlineKeyboardButton('Назначить ...', callback_data='choose')
@@ -66,7 +66,7 @@ def send_message_5(query_id, name, inv, place, cause, msg, photo, creator_tg_id,
     except:
         creator_fio = 'Неизвестный'
 
-    bot_2 = telebot.TeleBot('1044824865:AAGACPaLwqHdOMn5HZamAmSljkoDvSwOiBw')
+    bot_2 = telebot.TeleBot('#')
 
     keyboard = telebot.types.InlineKeyboardMarkup()
     key_choose = telebot.types.InlineKeyboardButton('Назначить ...', callback_data='choose')
